@@ -1,7 +1,3 @@
-// TODO: Lint this file
-// TODO: Dockerize the app dir
-// TODO: Clean this all up
-// TODO: Add a README
 // Imports
 import * as Amqp from 'amqp-ts';
 import * as express from 'express';
@@ -11,9 +7,6 @@ import * as dotenv from 'dotenv';
 
 // Load Environment Variables
 dotenv.config();
-
-// TODO: Remove this logging
-Amqp.log.transports.console.level = 'debug';
 
 // Initialize Rabbit Connection
 const conn: Amqp.Connection = new Amqp.Connection(`amqp://${process.env.RABBIT_URL}`);
@@ -34,7 +27,6 @@ for (const qKey in queues) {
 //       https://github.com/graphql-boilerplates/typescript-graphql-server/blob/master/basic/src/index.ts
 const schema = buildSchema(`
   type Query {
-    message: String,
     ping(host: String!, count: Int = 1): PingResult,
     geoip(host: String!): GeoIpResult
   },
@@ -115,7 +107,6 @@ const geoip = ({ host }) => {
 
 // Define actions
 const root = {
-  message: () => 'Hello World!',
   ping,
   geoip
 };
