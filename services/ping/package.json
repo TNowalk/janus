@@ -1,0 +1,19 @@
+{
+  "name": "janus-ping",
+  "version": "1.0.0",
+  "description": "",
+  "main": "index.js",
+  "scripts": {
+    "start": "node ./dist",
+    "build": "tsc",
+    "lint": "../../node_modules/tslint/bin/tslint index.ts",
+    "test": "echo \"Error: no test specified\" && exit 1"
+  },
+  "author": "",
+  "license": "ISC",
+  "dependencies": {
+    "amqp-ts": "github:TNowalk/amqp-ts#master",
+    "dotenv": "^6.2.0",
+    "ping": "^0.2.2"
+  }
+}
