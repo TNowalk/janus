@@ -1,20 +1,19 @@
 {
-  "name": "janus-app",
+  "name": "janus-geoip",
   "version": "1.0.0",
   "description": "",
   "main": "index.js",
   "scripts": {
     "start": "node ./dist",
     "build": "tsc",
+    "lint": "../../node_modules/tslint/bin/tslint index.ts",
     "test": "echo \"Error: no test specified\" && exit 1"
   },
   "author": "",
   "license": "ISC",
   "dependencies": {
     "amqp-ts": "github:TNowalk/amqp-ts#master",
-    "express": "^4.16.4",
-    "express-graphql": "^0.7.1",
-    "graphql": "^14.0.2",
-    "graphql-tools": "^4.0.3"
+    "dotenv": "^6.2.0",
+    "request": "^2.88.0"
   }
 }

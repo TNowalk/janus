@@ -1,12 +1,15 @@
+// TODO: Add a README
 import * as Amqp from 'amqp-ts';
+import * as ping from 'ping';
+import * as dotenv from 'dotenv'
 
-const ping = require('ping');
-require('dotenv').config();
+// Load Environment Variables
+dotenv.config()
 
 // Initialize Rabbit Connection
-const conn = new Amqp.Connection(`amqp://${process.env.RABBIT_URL}`);
-const exchange = conn.declareExchange('janus-tasks');
-const queue = conn.declareQueue('action.ping', { durable: false });
+const conn: Amqp.Connection = new Amqp.Connection(`amqp://${process.env.RABBIT_URL}`);
+const exchange: Amqp.Exchange = conn.declareExchange('janus-tasks');
+const queue: Amqp.Queue = conn.declareQueue('action.ping', { durable: false });
 
 queue.bind(exchange);
 
