@@ -36,17 +36,17 @@ these are found in the root directory.
 # Install global packages
 npm install
 
-# Install packages for GraphQL API
+# Install packages for GraphQL API and compile
 cd app
-npm install
+npm install && npm run build
 
-# Install packages for GeoIP service
+# Install packages for GeoIP service and compile
 cd ../services/geoip
-npm install
+npm install && npm run build
 
-# Install packages for Ping service
+# Install packages for Ping service and compile
 cd ../ping
-npm install
+npm install && npm run build
 ```
 
 Each package has a `.env.example` file, these should be renamed or copied to `.env`.
@@ -61,7 +61,7 @@ If all was successful, the GraphQL API should be running at http://localhost:400
 ![screenshot](./resources/img/graphql.png)
 
 After any changes are made, the TypeScript will need to be transpiled.  As of
-right now, this is a manual process using `tsc`.
+right now, this is a manual process using `npm run build`.
 
 There are two **Query** functions, `ping` and `geoip` which can be used.  The available
 fields are:
@@ -235,6 +235,9 @@ doesn't hang indefinitely
 * Add README to the services
 * Figure out a better way to do the deployments with Docker to support multiple
 instances run on same server
+* Automate the build process
+  * Use gulp to watch files and re-compile project after changes
+  * For build process, tsc -> docker build
 
 ## License
 
