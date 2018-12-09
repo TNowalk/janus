@@ -1,10 +1,11 @@
 // TODO: Add a README
+import * as dns from 'dns';
 import * as Amqp from 'amqp-ts';
 import * as request from 'request';
-import * as dotenv from 'dotenv'
+import * as dotenv from 'dotenv';
 
 // Load Environment Variables
-dotenv.config()
+dotenv.config();
 
 // Initialize Rabbit Connection
 const conn: Amqp.Connection = new Amqp.Connection(`amqp://${process.env.RABBIT_URL}`);
@@ -68,62 +69,84 @@ queue.activateConsumer((message: Amqp.Message): Promise<GeoIpResult|GeoIpError> 
   const host = message.getContent().host;
   message.ack();
 
-  // https://api.ipdata.co/172.72.174.37?api-key=901d5d47f2cec0814989dd2db9c41ea490c13585a08c1bf55c2b3fd8
-
   return new Promise((resolve, reject) => {
-    const url: string = `${IPDATA_URL}/${host}?api-key=${IPDATA_API_KEY}`;
+    // sometimes we a hostname, convert to IP
+    getIpAddress(host).then(ip => {
+      const url: string = `${IPDATA_URL}/${ip}?api-key=${IPDATA_API_KEY}`;
 
-    request.get(url, (error, response, body) => {
-      const json = JSON.parse(body);
+      request.get(url, (error, response, body) => {
+        const json = JSON.parse(body);
 
-      if (json.message) {
-        const result: GeoIpError = {
-          error: true,
-          message: json.message
-        };
-        resolve(result);
-      } else {
-        const result: GeoIpResult = {
-          error: false,
-          message: null,
-          ip: json.ip,
-          city: json.city,
-          region: json.region,
-          country: json.country_name,
-          continent: json.country_code,
-          latitude: json.latitude,
-          longitude: json.longitude,
-          asn: json.asn,
-          organization: json.organisation,
-          postal: json.postal,
-          flag: json.flag,
-          emojiFlag: json.emoji_flag,
-          languages: json.languages,
-          currency: {
-            name: json.currency.name,
-            code: json.currency.code,
-            symbol: json.currency.symbol,
-            native: json.currency.native
-          },
-          timezone: {
-            name: json.time_zone.name,
-            abbr: json.time_zone.abbr,
-            offset: json.time_zone.offset,
-            isDst: json.time_zone.is_dst,
-            currentTime: json.time_zone.current_time
-          },
-          threat: {
-            isTor: json.threat.is_tor,
-            isProxy: json.threat.is_proxy,
-            isAnonymous: json.threat.is_anonymous,
-            isKnownAttacker: json.threat.is_known_attacker,
-            isKnownAbuser: json.threat.is_known_abuser,
-            isThreat: json.threat.is_threat,
-            isBogon: json.threat.is_bogon
-          }
-        };
-        resolve(result);
-      }
+        if (json.message) {
+          const result: GeoIpError = {
+            error: true,
+            message: json.message
+          };
+          resolve(result);
+        } else {
+          const result: GeoIpResult = {
+            error: false,
+            message: null,
+            ip: json.ip,
+            city: json.city,
+            region: json.region,
+            country: json.country_name,
+            continent: json.country_code,
+            latitude: json.latitude,
+            longitude: json.longitude,
+            asn: json.asn,
+            organization: json.organisation,
+            postal: json.postal,
+            flag: json.flag,
+            emojiFlag: json.emoji_flag,
+            languages: json.languages,
+            currency: {
+              name: json.currency.name,
+              code: json.currency.code,
+              symbol: json.currency.symbol,
+              native: json.currency.native
+            },
+            timezone: {
+              name: json.time_zone.name,
+              abbr: json.time_zone.abbr,
+              offset: json.time_zone.offset,
+              isDst: json.time_zone.is_dst,
+              currentTime: json.time_zone.current_time
+            },
+            threat: {
+              isTor: json.threat.is_tor,
+              isProxy: json.threat.is_proxy,
+              isAnonymous: json.threat.is_anonymous,
+              isKnownAttacker: json.threat.is_known_attacker,
+              isKnownAbuser: json.threat.is_known_abuser,
+              isThreat: json.threat.is_threat,
+              isBogon: json.threat.is_bogon
+            }
+          };
+          resolve(result);
+        }
+      });
     });
   });
 });
+
+function validateIp(address: string): boolean {
+  // Borrowed from https://www.regextester.com/104038
+  // tslint:disable-next-line
+  const pattern: string = '((^\s*((([0-9]|[1-9][0-9]|1[0-9]{2}|2[0-4][0-9]|25[0-5])\.){3}([0-9]|[1-9][0-9]|1[0-9]{2}|2[0-4][0-9]|25[0-5]))\s*$)|(^\s*((([0-9A-Fa-f]{1,4}:){7}([0-9A-Fa-f]{1,4}|:))|(([0-9A-Fa-f]{1,4}:){6}(:[0-9A-Fa-f]{1,4}|((25[0-5]|2[0-4]\d|1\d\d|[1-9]?\d)(\.(25[0-5]|2[0-4]\d|1\d\d|[1-9]?\d)){3})|:))|(([0-9A-Fa-f]{1,4}:){5}(((:[0-9A-Fa-f]{1,4}){1,2})|:((25[0-5]|2[0-4]\d|1\d\d|[1-9]?\d)(\.(25[0-5]|2[0-4]\d|1\d\d|[1-9]?\d)){3})|:))|(([0-9A-Fa-f]{1,4}:){4}(((:[0-9A-Fa-f]{1,4}){1,3})|((:[0-9A-Fa-f]{1,4})?:((25[0-5]|2[0-4]\d|1\d\d|[1-9]?\d)(\.(25[0-5]|2[0-4]\d|1\d\d|[1-9]?\d)){3}))|:))|(([0-9A-Fa-f]{1,4}:){3}(((:[0-9A-Fa-f]{1,4}){1,4})|((:[0-9A-Fa-f]{1,4}){0,2}:((25[0-5]|2[0-4]\d|1\d\d|[1-9]?\d)(\.(25[0-5]|2[0-4]\d|1\d\d|[1-9]?\d)){3}))|:))|(([0-9A-Fa-f]{1,4}:){2}(((:[0-9A-Fa-f]{1,4}){1,5})|((:[0-9A-Fa-f]{1,4}){0,3}:((25[0-5]|2[0-4]\d|1\d\d|[1-9]?\d)(\.(25[0-5]|2[0-4]\d|1\d\d|[1-9]?\d)){3}))|:))|(([0-9A-Fa-f]{1,4}:){1}(((:[0-9A-Fa-f]{1,4}){1,6})|((:[0-9A-Fa-f]{1,4}){0,4}:((25[0-5]|2[0-4]\d|1\d\d|[1-9]?\d)(\.(25[0-5]|2[0-4]\d|1\d\d|[1-9]?\d)){3}))|:))|(:(((:[0-9A-Fa-f]{1,4}){1,7})|((:[0-9A-Fa-f]{1,4}){0,5}:((25[0-5]|2[0-4]\d|1\d\d|[1-9]?\d)(\.(25[0-5]|2[0-4]\d|1\d\d|[1-9]?\d)){3}))|:)))(%.+)?\s*$))';
+  const regex: RegExp = new RegExp(pattern);
+  return regex.test(address);
+}
+
+function getIpAddress(address: string): Promise<string> {
+  return new Promise(resolve => {
+    if (validateIp(address)) {
+      resolve(address);
+    } else {
+      dns.lookup(address, (err, addr) => {
+        if (!err)
+          resolve(addr);
+      });
+    }
+  });
+}

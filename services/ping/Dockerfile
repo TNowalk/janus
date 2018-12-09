@@ -15,6 +15,5 @@ COPY --chown=node:node . .
 USER node
 
 EXPOSE 5672
-EXPOSE 53
 
 CMD [ "npm", "start" ]

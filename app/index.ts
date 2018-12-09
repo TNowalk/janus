@@ -2,25 +2,28 @@
 // TODO: Dockerize the app dir
 // TODO: Clean this all up
 // TODO: Add a README
-
 // Imports
 import * as Amqp from 'amqp-ts';
 import * as express from 'express';
 import * as graphql from 'express-graphql';
 import { buildSchema } from 'graphql';
+import * as dotenv from 'dotenv';
+
+// Load Environment Variables
+dotenv.config();
 
 // TODO: Remove this logging
 Amqp.log.transports.console.level = 'debug';
 
 // Initialize Rabbit Connection
-let conn: Amqp.Connection = new Amqp.Connection('amqp://localhost');
-let exchange: Ampq.Exchange = conn.declareExchange('janus-tasks');
-let queues = {
+const conn: Amqp.Connection = new Amqp.Connection(`amqp://${process.env.RABBIT_URL}`);
+const exchange: Amqp.Exchange = conn.declareExchange('janus-tasks');
+const queues: { ping: Amqp.Queue, geoip: Amqp.Queue } = {
   ping: conn.declareQueue('action.ping', { durable: false }),
   geoip: conn.declareQueue('action.geoip', { durable: false })
 };
 
-for (let qKey in queues) {
+for (const qKey in queues) {
   queues[qKey].bind(exchange);
 }
 
@@ -29,7 +32,7 @@ for (let qKey in queues) {
 //       move the PingResult and ping function to it's own module.
 //       https://stackoverflow.com/a/43741760
 //       https://github.com/graphql-boilerplates/typescript-graphql-server/blob/master/basic/src/index.ts
-let schema = buildSchema(`
+const schema = buildSchema(`
   type Query {
     message: String,
     ping(host: String!, count: Int = 1): PingResult,
@@ -93,7 +96,7 @@ let schema = buildSchema(`
   }
 `);
 
-let ping = ({ host, count }) => {
+const ping = ({ host, count }) => {
   if (count < 1) {
     count = 1;
   }
@@ -101,23 +104,23 @@ let ping = ({ host, count }) => {
   return queues.ping.rpc({ host, count }).then((result) => {
     return JSON.parse(result.getContent());
   });
-}
+};
 
-let geoip = ({ host }) => {
+const geoip = ({ host }) => {
   // TODO: Need some sort of timeout / error if no response
   return queues.geoip.rpc({ host }).then((result) => {
     return JSON.parse(result.getContent());
   });
-}
+};
 
 // Define actions
-let root = {
+const root = {
   message: () => 'Hello World!',
   ping,
   geoip
 };
 
-let app = express();
+const app = express();
 
 // Inject GraphQL middleware
 app.use('/api', graphql({

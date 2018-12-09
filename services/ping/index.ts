@@ -1,10 +1,10 @@
 // TODO: Add a README
 import * as Amqp from 'amqp-ts';
 import * as ping from 'ping';
-import * as dotenv from 'dotenv'
+import * as dotenv from 'dotenv';
 
 // Load Environment Variables
-dotenv.config()
+dotenv.config();
 
 // Initialize Rabbit Connection
 const conn: Amqp.Connection = new Amqp.Connection(`amqp://${process.env.RABBIT_URL}`);
